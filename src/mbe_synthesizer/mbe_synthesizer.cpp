@@ -116,6 +116,13 @@ void MbeSynthesizer::setMode(Mode* mode) {
     readerThread = new std::thread([this] () { readLoop(); });
 }
 
+void MbeSynthesizer::setCodecArgument(const std::string& name, const std::string& value) {
+    if (mode != nullptr) {
+        throw ProtocolError("codec arguments must be set before the mode");
+    }
+    codecArguments[name] = value;
+}
+
 MbeSynthesizer::~MbeSynthesizer() {
     run = false;
     if (connection != nullptr) {
@@ -200,6 +207,9 @@ void MbeSynthesizer::request() {
         (*settings->mutable_args())["index"] = std::to_string(tmode->getIndex());
     } else if ((cmode = dynamic_cast<ControlWordMode*>(currentMode))) {
         (*settings->mutable_args())["ratep"] = cmode->getCwdsAsString();
+    }
+    for (const auto& argument: codecArguments) {
+        (*settings->mutable_args())[argument.first] = argument.second;
     }
     connection->sendMessage(&request);
 
@@ -306,6 +316,9 @@ void MbeSynthesizer::setDynamicMode(Mode *mode) {
         (*settings->mutable_args())["index"] = std::to_string(tmode->getIndex());
     } else if ((cmode = dynamic_cast<ControlWordMode*>(mode))) {
         (*settings->mutable_args())["ratep"] = cmode->getCwdsAsString();
+    }
+    for (const auto& argument: codecArguments) {
+        (*settings->mutable_args())[argument.first] = argument.second;
     }
 
     // get the lock before sending the request

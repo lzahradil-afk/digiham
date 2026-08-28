@@ -6,6 +6,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <map>
 #include "ambe_modes.hpp"
 
 namespace Digiham {
@@ -49,6 +50,7 @@ namespace Digiham {
                 MbeSynthesizer(const std::string& host, unsigned short port);
                 ~MbeSynthesizer() override;
                 void setMode(Mode* mode);
+                void setCodecArgument(const std::string& name, const std::string& value);
                 bool hasAmbeCodec();
                 bool canProcess() override;
                 void process() override;
@@ -70,6 +72,7 @@ namespace Digiham {
                 bool run = true;
                 std::condition_variable framingCV;
                 std::mutex framingMutex;
+                std::map<std::string, std::string> codecArguments;
         };
 
     }
