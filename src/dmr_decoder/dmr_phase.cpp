@@ -269,7 +269,11 @@ Digiham::Phase *FramePhase::process(Csdr::Reader<unsigned char> *data, Csdr::Wri
                         }
 
                         uint8_t lc_data[12] = { 0 };
-                        if (bptc_196_96(payload, lc_data)) {
+                        uint8_t ras_field = 0;
+                        if (bptc_196_96(payload, lc_data, &ras_field)) {
+                            ((MetaCollector*) meta)->withSlot(slot, [ras_field] (Slot* s) {
+                                s->setRasField(ras_field);
+                            });
                             if (data_type == DATA_TYPE_VOICE_LC) {
                                 Lc* lc = Lc::parseFromVoiceHeader(lc_data);
                                 if (lc != nullptr) {

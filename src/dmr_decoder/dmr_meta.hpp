@@ -18,6 +18,7 @@ namespace Digiham::Dmr {
             void setSource(uint32_t source);
             void setTarget(uint32_t target);
             void setFromLc(Lc* lc);
+            void setRasField(uint8_t value);
             void setTalkerAlias(std::string alias);
             void setCoordinate(Digiham::Coordinate* coordinate);
             void reset();
@@ -37,6 +38,7 @@ namespace Digiham::Dmr {
             int featureSetId = -1;
             int serviceOptions = -1;
             int privacy = -1;
+            int rasField = -1;
             std::string talkerAlias;
             Digiham::Coordinate* coordinate = nullptr;
     };

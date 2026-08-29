@@ -2,7 +2,7 @@
 #include "hamming_13_9.h"
 #include "hamming_15_11.h"
 
-bool bptc_196_96(uint8_t* payload, uint8_t* output) {
+bool bptc_196_96(uint8_t* payload, uint8_t* output, uint8_t* reserved_bits) {
     uint8_t i, k;
 
     // deinterleave payload according to ETSI B.1.1 (BPTC196,96)
@@ -28,6 +28,14 @@ bool bptc_196_96(uint8_t* payload, uint8_t* output) {
     }
 
     if (!hamming_result) return false;
+
+    // R(0)..R(2) are the first three corrected matrix bits. Motorola RAS
+    // commonly signals the value 0b100 here while masking higher-layer CRCs.
+    if (reserved_bits != NULL) {
+        *reserved_bits = ((payload_pivoted[2] >> 12) & 1)
+                       | (((payload_pivoted[1] >> 12) & 1) << 1)
+                       | (((payload_pivoted[0] >> 12) & 1) << 2);
+    }
 
     // pivot back in order to apply row FEC (we can already drop the final rows at this point)
     uint16_t payload_rows[9] = { 0 };

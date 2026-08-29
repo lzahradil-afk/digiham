@@ -56,6 +56,12 @@ void Slot::setFromLc(Lc *lc) {
     }
 }
 
+void Slot::setRasField(uint8_t value) {
+    if (rasField == value) return;
+    rasField = value;
+    setDirty();
+}
+
 void Slot::setTalkerAlias(std::string alias) {
     if (talkerAlias == alias) return;
     talkerAlias = alias;
@@ -92,10 +98,11 @@ void Slot::softReset() {
     setTarget(0);
     setTalkerAlias("");
     setCoordinate(nullptr);
-    if (featureSetId != -1 || serviceOptions != -1 || privacy != -1) {
+    if (featureSetId != -1 || serviceOptions != -1 || privacy != -1 || rasField != -1) {
         featureSetId = -1;
         serviceOptions = -1;
         privacy = -1;
+        rasField = -1;
         setDirty();
     }
 }
@@ -127,6 +134,10 @@ std::map<std::string, std::string> Slot::collect() {
     }
     if (privacy >= 0) {
         result["privacy"] = privacy ? "1" : "0";
+    }
+    if (rasField >= 0) {
+        result["ras_field"] = std::to_string(rasField);
+        result["ras_indication"] = rasField == 4 ? "1" : "0";
     }
     if (!talkerAlias.empty()) {
         result["talkeralias"] = talkerAlias;
