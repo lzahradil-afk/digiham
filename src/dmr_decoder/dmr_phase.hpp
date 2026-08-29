@@ -20,7 +20,7 @@ namespace Digiham::Dmr {
 
     class Phase: public Digiham::Phase {
         protected:
-            int getSyncType(unsigned char* potentialSync);
+            int getSyncType(unsigned char* potentialSync, bool* mobile = nullptr);
 
             const unsigned char dmr_bs_data_sync[SYNC_SIZE] =  { 3,1,3,3,3,3,1,1,1,3,3,1,1,3,1,1,3,1,3,3,1,1,3,1 };
             const unsigned char dmr_bs_voice_sync[SYNC_SIZE] = { 1,3,1,1,1,1,3,3,3,1,1,3,3,1,3,3,1,3,1,1,3,3,1,3 };
@@ -41,7 +41,7 @@ namespace Digiham::Dmr {
 
     class FramePhase: public Phase {
         public:
-            FramePhase();
+            explicit FramePhase(bool mobile = false);
             ~FramePhase() override;
             int getRequiredData() override;
             Digiham::Phase* process(Csdr::Reader<unsigned char>* data, Csdr::Writer<unsigned char>* output) override;
@@ -58,6 +58,7 @@ namespace Digiham::Dmr {
             int activeSlot = -1;
             unsigned char slotFilter = 3;
             unsigned char superframeCounter[2] = {0, 0};
+            bool mobileMode = false;
     };
 
 }

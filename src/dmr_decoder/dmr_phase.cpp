@@ -15,7 +15,8 @@ extern "C" {
 
 using namespace Digiham::Dmr;
 
-int Phase::getSyncType(unsigned char *potentialSync) {
+int Phase::getSyncType(unsigned char *potentialSync, bool* mobile) {
+    if (mobile != nullptr) *mobile = false;
     if (hamming_distance((uint8_t*) potentialSync, (uint8_t*) dmr_bs_data_sync, SYNC_SIZE) <= 3) {
         return SYNCTYPE_DATA;
     }
@@ -23,9 +24,11 @@ int Phase::getSyncType(unsigned char *potentialSync) {
         return SYNCTYPE_VOICE;
     }
     if (hamming_distance((uint8_t*) potentialSync, (uint8_t*) dmr_ms_data_sync, SYNC_SIZE) <= 3) {
+        if (mobile != nullptr) *mobile = true;
         return SYNCTYPE_DATA;
     }
     if (hamming_distance((uint8_t*) potentialSync, (uint8_t*) dmr_ms_voice_sync, SYNC_SIZE) <= 3) {
+        if (mobile != nullptr) *mobile = true;
         return SYNCTYPE_VOICE;
     }
 
@@ -37,8 +40,9 @@ int SyncPhase::getRequiredData() {
 };
 
 Digiham::Phase* SyncPhase::process(Csdr::Reader<unsigned char>* data, Csdr::Writer<unsigned char>* output) {
-    int syncType = getSyncType(data->getReadPointer() + syncOffset);
-    if (syncType > 0) return new FramePhase();
+    bool mobile = false;
+    int syncType = getSyncType(data->getReadPointer() + syncOffset, &mobile);
+    if (syncType > 0) return new FramePhase(mobile);
 
     // as long as we don't find any sync, move ahead, symbol by symbol
     data->advance(1);
@@ -46,10 +50,13 @@ Digiham::Phase* SyncPhase::process(Csdr::Reader<unsigned char>* data, Csdr::Writ
     return this;
 }
 
-FramePhase::FramePhase():
+FramePhase::FramePhase(bool mobile):
     embCollectors { new EmbeddedCollector(), new EmbeddedCollector() },
-    talkerAliasCollector { new TalkerAliasCollector(), new TalkerAliasCollector }
-{}
+    talkerAliasCollector { new TalkerAliasCollector(), new TalkerAliasCollector },
+    mobileMode(mobile)
+{
+    if (mobileMode) slot = 0;
+}
 
 FramePhase::~FramePhase() {
     delete embCollectors[0];
@@ -67,7 +74,11 @@ Digiham::Phase *FramePhase::process(Csdr::Reader<unsigned char> *data, Csdr::Wri
     // slots should always be alternating, but may be overridden by 100% correct tact
     // this is our assumption of what the next slot should be, based on the last slot:
     unsigned char next = slot ^ 1;
-    if (cach->hasTact()) {
+    if (mobileMode) {
+        // ETSI direct/mobile mode is a single logical channel. Its bursts must
+        // not be distributed over the alternating repeater slots based on CACH.
+        slot = 0;
+    } else if (cach->hasTact()) {
         // is our assumption correct?
         if (cach->getTact()->getSlot() != next) {
             // no. act according to the level of confidence aka. slotStability
@@ -99,8 +110,13 @@ Digiham::Phase *FramePhase::process(Csdr::Reader<unsigned char> *data, Csdr::Wri
     delete cach;
 
     if (slot != -1) {
-        int syncType = getSyncType(data->getReadPointer() + syncOffset);
+        bool mobileSync = false;
+        int syncType = getSyncType(data->getReadPointer() + syncOffset, &mobileSync);
         if (syncType > 0) {
+            if (mobileSync) {
+                mobileMode = true;
+                slot = 0;
+            }
             // increase sync count, cap at 5
             if (++syncCount > 5) syncCount = 5;
             if (++slotSyncCount[slot] > 5) slotSyncCount[slot] = 5;
