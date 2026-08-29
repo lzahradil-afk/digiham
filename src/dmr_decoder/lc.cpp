@@ -28,6 +28,14 @@ unsigned char Lc::getFeatureSetId() {
     return data[1];
 }
 
+unsigned char Lc::getServiceOptions() {
+    return data[2];
+}
+
+bool Lc::isPrivacyEnabled() {
+    return (getServiceOptions() & 0x40) != 0;
+}
+
 uint32_t Lc::getSource() {
     uint32_t source_id = data[6] << 16 | data[7] << 8 | data[8];
     return source_id;

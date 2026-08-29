@@ -45,6 +45,15 @@ void Slot::setFromLc(Lc *lc) {
     }
     setTarget(lc->getTarget());
     setSource(lc->getSource());
+    int newFeatureSetId = lc->getFeatureSetId();
+    int newServiceOptions = lc->getServiceOptions();
+    int newPrivacy = lc->isPrivacyEnabled() ? 1 : 0;
+    if (featureSetId != newFeatureSetId || serviceOptions != newServiceOptions || privacy != newPrivacy) {
+        featureSetId = newFeatureSetId;
+        serviceOptions = newServiceOptions;
+        privacy = newPrivacy;
+        setDirty();
+    }
 }
 
 void Slot::setTalkerAlias(std::string alias) {
@@ -83,6 +92,12 @@ void Slot::softReset() {
     setTarget(0);
     setTalkerAlias("");
     setCoordinate(nullptr);
+    if (featureSetId != -1 || serviceOptions != -1 || privacy != -1) {
+        featureSetId = -1;
+        serviceOptions = -1;
+        privacy = -1;
+        setDirty();
+    }
 }
 
 void Slot::reset() {
@@ -103,6 +118,15 @@ std::map<std::string, std::string> Slot::collect() {
     }
     if (target > 0) {
         result["target"] = std::to_string(target);
+    }
+    if (featureSetId >= 0) {
+        result["fid"] = std::to_string(featureSetId);
+    }
+    if (serviceOptions >= 0) {
+        result["service_options"] = std::to_string(serviceOptions);
+    }
+    if (privacy >= 0) {
+        result["privacy"] = privacy ? "1" : "0";
     }
     if (!talkerAlias.empty()) {
         result["talkeralias"] = talkerAlias;

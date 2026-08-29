@@ -34,6 +34,9 @@ namespace Digiham::Dmr {
             int type = -1;
             uint32_t source;
             uint32_t target;
+            int featureSetId = -1;
+            int serviceOptions = -1;
+            int privacy = -1;
             std::string talkerAlias;
             Digiham::Coordinate* coordinate = nullptr;
     };

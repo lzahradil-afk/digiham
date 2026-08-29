@@ -20,6 +20,8 @@ namespace Digiham::Dmr {
             ~Lc();
             unsigned char getOpCode();
             unsigned char getFeatureSetId();
+            unsigned char getServiceOptions();
+            bool isPrivacyEnabled();
             uint32_t getSource();
             uint32_t getTarget();
             unsigned char* getData();
