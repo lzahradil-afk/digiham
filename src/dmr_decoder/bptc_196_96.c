@@ -1,6 +1,7 @@
 #include "bptc_196_96.h"
 #include "hamming_13_9.h"
 #include "hamming_15_11.h"
+#include <stddef.h>
 
 bool bptc_196_96(uint8_t* payload, uint8_t* output, uint8_t* reserved_bits) {
     uint8_t i, k;
